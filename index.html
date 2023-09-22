@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flappy bird</title>
+    <style>
+      body {
+        margin: 0;
+        height: 100vh;
+        background: url(bg1.jpg);
+        background-size: 100% 100%;
+        overflow: hidden;
+        font-family:Calibri;
+      }
+      .bird {
+        position: absolute;
+        top: calc(50% - 50px);
+        left: 100px;
+        height: 100px;
+        aspect-ratio: 1;
+        background: url(bird.png);
+        background-size: 400%;
+        background-position: calc(100% * 4);
+        border-radius: 50%;
+        transform: rotateY(180deg);
+      }
+      .hurdles2 {
+        position: absolute;
+        z-index: 50;
+        height: 65dvh;
+        top: calc(100% - 65dvh);
+        aspect-ratio: 5/16;
+        background: url(redhurdles.png);
+        background-size: 100%;
+      }
+      .hurdles1 {
+        position: absolute;
+        z-index: 50;
+        height: 65dvh;
+        top: calc(-65dvh + 65%);
+        aspect-ratio: 5/16;
+        transform: rotateZ(180deg);
+        background: url(redhurdles.png);
+        background-size: 100%;
+      }
+      /*  */
+      .score {
+        font-size: 140%;
+        position: absolute;
+        top: 40px;
+        left: 20px;
+        z-index: 100;
+      }
+      /* start menu */
+      .startmenu {
+        z-index: 500;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100dvh;
+        width: 100vw;
+        backdrop-filter: blur(10px);
+        display: grid;
+        place-content: center;
+      }
+      .startmenucounter {
+        font-size: min(10vh, 10vw);
+        height: min(20vh, 20vw);
+        aspect-ratio: 1;
+        border: 2px solid black;
+        border-radius: 50%;
+        display: grid;
+        place-content: center;
+      }
+      .startmenu span {
+        position: absolute;
+        bottom: 50px;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      /*  */
+      .finalmenu {
+        z-index: 500;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100dvh;
+        width: 100vw;
+        backdrop-filter: blur(10px);
+        display: none;
+        place-content: center;
+      }
+      .finalmenubox {
+        height: min(30vh, 30vw);
+        aspect-ratio: 5/4;
+        background-color: rgba(255, 255, 255, 0.578);
+        display: flex;
+        gap: 10%;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+      }
+      .finalmenubox p {
+        font-size: 140%;
+      }
+      .finalmenubox button {
+        background: skyblue;
+        padding: 5px 10px;
+        border-radius: 100px;
+        border: none;
+        cursor: pointer;
+      }
+      .finalmenubox button:hover {
+        box-shadow: 1px 1px 2px 0px black;
+      }
+      /*  */
+      .sky{
+        height: 20px;
+        width: 100vw;
+        background: url(spike1.png);
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+      /*  */
+      .firefloor {
+        height: 40px;
+        width: 100vw;
+        background: url(lava.jpg);
+        background-size: 100% 100%;
+        mix-blend-mode:multiply;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+      }
+      /*  */
+      .bubbles {
+        position: absolute;
+        top: 100%;
+        height: 20px;
+        aspect-ratio: 1;
+        background-color: rgba(255, 0, 0, 0.498);
+        border-radius: 50%;
+        animation: bubbles 2s forwards ease-in;
+      }
+      @keyframes bubbles {
+        0% {
+          transform: translateY(0px);
+        }
+        99% {
+          transform: translateY(-60px);
+        }
+        100% {
+          transform: translateY(-60px) scale(2);
+        }
+      }
+      .bubbles::before {
+        position: absolute;
+        top: 20%;
+        right: 20%;
+        content: "";
+        height: 40%;
+        aspect-ratio: 1;
+        background-color: rgba(255, 255, 255, 0.217);
+        border-radius: 50%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bird"></div>
+    <div class="score">Score : 0</div>
+    <div class="startmenu">
+      <p class="startmenucounter">3</p>
+      <span> Press "space","w" or "touch the screen" to fly </span>
+    </div>
+    <div class="finalmenu">
+      <div class="finalmenubox">
+        <p class="finalscore">Score : 00</p>
+        <button class="playagain" onclick="window.location.reload()">
+          Play again
+        </button>
+      </div>
+    </div>
+    <div class="sky"></div>
+    <div class="firefloor"></div>
+    <script>
+      let bird = document.querySelector(".bird");
+      let birdpos = {
+        top: window.innerHeight / 2 - 50,
+        backgroundnum: 0,
+        controlbgframe: 0,
+        bgframes: 9,
+        flyup: false,
+      };
+      let hurdles_array1 = [];
+      let hurdles_array2 = [];
+      function animate() {
+        if (birdpos.flyup) {
+          birdpos.top -= 6;
+        } else {
+          birdpos.top += 5;
+        }
+        bird.style.top = birdpos.top + "px";
+        birdpos.controlbgframe++;
+        if (birdpos.controlbgframe > birdpos.bgframes) {
+          birdpos.backgroundnum++;
+          if (birdpos.backgroundnum > 4) {
+            birdpos.backgroundnum = 1;
+          }
+          bird.style.backgroundPosition =
+            "calc(100% * " + birdpos.backgroundnum + ")";
+          birdpos.controlbgframe = 0;
+        }
+        // move hurdle
+        for (let i = 0; i < hurdles_array1.length; i++) {
+          hurdles_array1[i].move(1);
+          if (hurdles_array1[i].left < -200) {
+            hurdles_array1.shift();
+            document.querySelectorAll(".hurdles1").forEach((item, index) => {
+              if (index == 0) {
+                item.remove();
+              }
+            });
+          }
+          // collision detection
+          if (
+            hurdles_array1[i].left < 170 &&
+            hurdles_array1[i].left >
+              110 - ((window.innerHeight * 65) / 100) * (5 / 16) &&
+            birdpos.top + 20 <
+              hurdles_array1[i].height + (window.innerHeight * 65) / 100
+          ) {
+            collision();
+          }
+        }
+        //
+        for (let i = 0; i < hurdles_array2.length; i++) {
+          hurdles_array2[i].move(1);
+          if (hurdles_array2[i].left < -200) {
+            hurdles_array2.shift();
+            document.querySelectorAll(".hurdles2").forEach((item, index) => {
+              if (index == 0) {
+                item.remove();
+              }
+            });
+          }
+          // collision detection
+          if (
+            hurdles_array2[i].left < 170 &&
+            hurdles_array2[i].left >
+              110 - ((window.innerHeight * 65) / 100) * (5 / 16) &&
+            birdpos.top + 70 > hurdles_array2[i].height
+          ) {
+            collision();
+          }
+        }
+        // top and bottom collision detection
+        if (birdpos.top + 20 < 0 || birdpos.top + 70 > window.innerHeight) {
+          collision();
+        }
+        requestAnimationFrame(animate);
+      }
+      //
+      let startmenucountervalue = 3;
+      let stratmenucounter = setInterval(() => {
+        startmenucountervalue--;
+        document.querySelector(".startmenucounter").innerHTML =
+          startmenucountervalue;
+      }, 1000);
+      //
+      let score = 0;
+      let scoretimer;
+      setTimeout(() => {
+        animate();
+        //
+        clearInterval(stratmenucounter);
+        //
+        document.querySelector(".startmenu").style.display = "none";
+        // score timer
+        scoretimer = setInterval(() => {
+          score += 10;
+          document.querySelector(".score").innerHTML = "Score : " + score;
+        }, 1000);
+      }, 3000);
+
+      // collision function
+      function collision() {
+        bird.style.display = "none";
+        document.querySelector(".finalmenu").style.display = "grid";
+        clearInterval(scoretimer);
+        document.querySelector(".finalscore").innerHTML = "Score : " + score;
+      }
+      //
+      let birdflytimer;
+      function flybird() {
+        birdpos.flyup = true;
+        birdpos.bgframes = 5;
+        clearTimeout(birdflytimer);
+        birdflytimer = setTimeout(() => {
+          birdpos.bgframes = 9;
+          birdpos.flyup = false;
+        }, 150);
+      }
+      //
+      document.onkeydown = (e) => {
+        if (e.key == " ") {
+          flybird();
+        }
+        if (e.key == "Enter") {
+          flybird();
+        }
+        if (e.key == "w") {
+          flybird();
+        }
+        if (e.key == "W") {
+          flybird();
+        }
+        if (e.key == "ArrowUp") {
+          flybird();
+        }
+      };
+      //
+      document.onclick = flybird;
+      // create hurdles
+      class hurdle1 {
+        constructor(left, height) {
+          this.height = height;
+          this.left = left;
+          this.div;
+        }
+        create() {
+          this.div = document.createElement("div");
+          this.div.classList.add("hurdles1");
+          this.div.style.top = this.height + "px";
+          document.body.appendChild(this.div);
+        }
+        move(value) {
+          this.left -= value;
+          this.div.style.left = this.left + "px";
+        }
+      }
+      //
+      class hurdle2 {
+        constructor(left, height) {
+          this.height = height;
+          this.left = left;
+          this.div;
+        }
+        create() {
+          this.div = document.createElement("div");
+          this.div.classList.add("hurdles2");
+          this.div.style.top = this.height + "px";
+          document.body.appendChild(this.div);
+        }
+        move(value) {
+          this.left -= value;
+          this.div.style.left = this.left + "px";
+        }
+      }
+      //hurdle1
+      setTimeout(() => {
+        setInterval(() => {
+          let value =
+            (window.innerHeight * Math.floor(Math.random() * 40 + 25)) / 100 -
+            (window.innerHeight * 65) / 100;
+          let h1 = new hurdle1(window.innerWidth, value);
+          h1.create();
+          hurdles_array1.push(h1);
+        }, 10000);
+      }, 5000);
+
+      //hurdle2
+      setInterval(() => {
+        let h2 = new hurdle2(
+          window.innerWidth,
+          (window.innerHeight * Math.floor(Math.random() * 50 + 35)) / 100
+        );
+        h2.create();
+        hurdles_array2.push(h2);
+      }, 10000);
+
+      // bubbles
+      setInterval(() => {
+        let bubble = document.createElement("div");
+        bubble.classList.add("bubbles");
+        bubble.style.left = Math.random() * window.innerWidth + "px";
+        bubble.style.height = Math.random() * 10 + 10 + "px";
+        document.body.appendChild(bubble);
+        setTimeout(() => {
+          bubble.remove();
+        }, 2010);
+      }, 200);
+    </script>
+  </body>
+</html>
